@@ -55,6 +55,16 @@ export class MyMCP extends McpAgent {
 				return { content: [{ type: "text", text: String(result) }] };
 			}
 		);
+		// Chicken crossing joke tool
+		this.server.tool(
+			"joke",
+			{},
+			async () => ({
+				content: [
+					{ type: "text", text: "Why did the chicken cross the road? To get to the other side!" },
+				],
+			})
+		);
 	}
 }
 
