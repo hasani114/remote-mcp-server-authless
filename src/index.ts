@@ -1,6 +1,7 @@
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Define our MCP agent with tools
 export class MyMCP extends McpAgent {
@@ -64,6 +65,45 @@ export class MyMCP extends McpAgent {
 					{ type: "text", text: "Why did the chicken cross the road? To get to the other side!" },
 				],
 			})
+		);
+
+		// Gemini Audio Transcription tool
+		this.server.tool(
+			"transcribeAudio",
+			{
+				base64Audio: z.string(),
+				mimeType: z.string(),
+			},
+			async ({ base64Audio, mimeType }) => {
+				const API_KEY = "YOUR_GEMINI_API_KEY_HERE"; // Hardcoded as requested
+				const genAI = new GoogleGenerativeAI(API_KEY);
+				const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+				const contents = [
+					{
+						inlineData: {
+							mimeType: mimeType,
+							data: base64Audio,
+						},
+					},
+				];
+
+				try {
+					const result = await model.generateContent({ contents });
+					const response = result.response;
+					const text = response.text();
+					return { content: [{ type: "text", text: text }] };
+				} catch (error: any) {
+					return {
+						content: [
+							{
+								type: "text",
+								text: `Error transcribing audio: ${error.message}`,
+							},
+						],
+					};
+				}
+			}
 		);
 	}
 }
